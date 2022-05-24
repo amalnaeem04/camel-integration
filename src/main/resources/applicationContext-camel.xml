@@ -1,0 +1,30 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camel="http://camel.apache.org/schema/spring"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://camel.apache.org/schema/spring
+		http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+	<bean id="routeBuilder" class="com.order.integration.routes.OrderServiceRoute" />
+	<bean id="routeBuilder1" class="com.order.integration.routes.ExceptionHandlerRoute" />
+	<bean id="routeBuilder2" class="com.order.integration.routes.ActiveMqReceiverRouter"/>
+	<bean id="slack" class="org.apache.camel.component.slack.SlackComponent">
+		<property name="webhookUrl" value="https://hooks.slack.com/services/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"/>
+		<property name="token" value="xoxb-867685791267-2720343202596-zOg12dZVOBZkA45rGqgmoNQE"/>
+	</bean>
+
+	<camelContext xmlns="http://camel.apache.org/schema/spring">
+		<errorHandler id="myErrorHandler" type="DeadLetterChannel"
+					  deadLetterUri="jms:queue:dead">
+			<redeliveryPolicy maximumRedeliveries="3" redeliveryDelay="10000"/>
+		</errorHandler>
+		<routeBuilder ref="routeBuilder" />
+		<routeBuilder ref="routeBuilder1" />
+		<routeBuilder ref="routeBuilder2" />
+		<redeliveryPolicyProfile id="testRedeliveryPolicyProfile"
+								  maximumRedeliveries="3"
+								 redeliveryDelay="10000" />
+
+	</camelContext>
+
+</beans>
